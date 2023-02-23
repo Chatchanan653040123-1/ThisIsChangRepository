@@ -105,14 +105,16 @@ class _MyAppState extends State<SimpleMaps> {
     late BitmapDescriptor iconOfVehicle;
     //String path;
     if (vehicle) {
+      place = GetDataMarker.getPlace(vehicle);
       iconOfVehicle = await BitmapDescriptor.fromAssetImage(
           ImageConfiguration(size: Size(1, 1)), "assets/images/carPinRed2.png");
     } else {
+      place = GetDataMarker.getPlace(vehicle);
       iconOfVehicle = await BitmapDescriptor.fromAssetImage(
           ImageConfiguration(size: Size(1, 1)),
           "assets/images/motoPinGreen2.png");
     }
-    place = await GetDataMarker.getPlace(vehicle);
+    //place = await GetDataMarker.getPlace(vehicle);
     // // Fetch content from the json file
     // final String response = await rootBundle.loadString(path);
     // final data = await json.decode(response);
@@ -363,7 +365,13 @@ class _MyAppState extends State<SimpleMaps> {
       currentLocationlongitude = value.longitude;
     });
   }
-
+@override
+void initState() {
+  super.initState();
+  addMakerCarMoto(true);
+  addMakerCarMoto(false);
+  _markers.clear();
+}
   @override
   Widget build(BuildContext context) {
     //realTimeLocationTask();
@@ -527,13 +535,15 @@ class _MyAppState extends State<SimpleMaps> {
                               // }
                               // List<bool> count = [true,false];
                               if (index == 0 && carIconPress == false) {
+                                addMakerCarMoto(true); //Car
+                                addMakerCarMoto(true); //Car
                                 carIconPress = true;
                                 motoIconPress = false;
-                                addMakerCarMoto(true); //Car
                               } else if (index == 1 && motoIconPress == false) {
+                                addMakerCarMoto(false); // Motorcycle
+                                addMakerCarMoto(false); // Motorcycle
                                 motoIconPress = true;
                                 carIconPress = false;
-                                addMakerCarMoto(false); // Motorcycle
                               } else {
                                 motoIconPress = false;
                                 carIconPress = false;
