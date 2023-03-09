@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:app01/navbar/Item.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:app01/Atom/CustomizeMarkerICon.dart';
@@ -58,6 +59,8 @@ class _MyAppState extends State<SimpleMaps> {
   static LatLng _center = LatLng(16.472955, 102.823042);
   bool motoIconPress = false;
   bool carIconPress = false;
+    late Map<String, dynamic> placeCar; //car // CacheRamUserV-1.0.0
+  late Map<String, dynamic> placeMoto; //moto // CacheRamUserV-1.0.0
   LatLng _pinPosition = _center;
   PolylinePoints polylinePoints = PolylinePoints();
   static CustomizeMarkerICon currentLocationICon =
@@ -101,30 +104,25 @@ class _MyAppState extends State<SimpleMaps> {
   }
 
   Future<void> addMakerCarMoto(bool vehicle) async {
-    Map<String, dynamic> place = {};
+    Map<String, dynamic> place;
     late BitmapDescriptor iconOfVehicle;
-    //String path;
     if (vehicle) {
-      place = GetDataMarker.getPlace(vehicle);
       iconOfVehicle = await BitmapDescriptor.fromAssetImage(
           ImageConfiguration(size: Size(1, 1)), "assets/images/carPinRed2.png");
+          place = placeCar;
     } else {
-      place = GetDataMarker.getPlace(vehicle);
       iconOfVehicle = await BitmapDescriptor.fromAssetImage(
           ImageConfiguration(size: Size(1, 1)),
           "assets/images/motoPinGreen2.png");
+          place = placeMoto;
     }
+    //print(place);
+    List<dynamic> _parkList = place["placeParking"];
+    //String path;
     //place = await GetDataMarker.getPlace(vehicle);
     // // Fetch content from the json file
     // final String response = await rootBundle.loadString(path);
     // final data = await json.decode(response);
-    List<dynamic> _parkList = [];
-    try {
-      _parkList = place["placeParking"];
-    } catch (e) {
-      _parkList = [];
-    }
-
     var listSize = _parkList.length;
     for (var i = 0; i < listSize; i++) {
       double latitude = _parkList[i]["Latitude"] as double;
@@ -164,7 +162,7 @@ class _MyAppState extends State<SimpleMaps> {
                                 const Text("Status :",
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold)),
-                                const Text("<No data>")
+                                Text(_parkList[i]["status"].toString()+" % free space"),
                               ]),
                         )),
                   ),
@@ -187,12 +185,6 @@ class _MyAppState extends State<SimpleMaps> {
                             backgroundColor: Colors.green,
                             child: Icon(Icons.add_location, size: 36.0),
                           ),
-                          // FloatingActionButton(
-                          //   onPressed: () async {
-                          //     null;
-                          //   },
-                          //   child: Icon(Icons.gps_fixed, size: 40),
-                          // ),
                         ],
                       ))
                 ],
@@ -205,7 +197,44 @@ class _MyAppState extends State<SimpleMaps> {
       ));
     }
   }
+  // CacheRamUserV-1.0.0
+  void getMotoMain() {
+    final docRef = GetDataMarker.getDatabaseMoto4();
+    docRef.get().then(
+      (DocumentSnapshot doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        // print("Check dataaaaaaaaaaaaaaaaaaaaaaa");
+        // print(data);
+        placeMoto = data;
+        // print("Check dataaaaaaaaaaaaaaaaaaaaaaa");
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+  }
+  // CacheRamUserV-1.0.0
+  void getCarMain() {
+    final docRef = GetDataMarker.getDatabaseCar4();
+    docRef.get().then(
+      (DocumentSnapshot doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        // print("Check dataaaaaaaaaaaaaaaaaaaaaaa");
+        // print(data);
+        placeCar = data;
+        // print("Check dataaaaaaaaaaaaaaaaaaaaaaa");
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+  }
 
+  @override
+  void initState() {
+    super.initState();
+    // CacheRamUserV-1.0.0
+    getMotoMain();
+    // CacheRamUserV-1.0.0
+    getCarMain();
+    
+  }
   void _onAddMarkerpin() {
     setState(() {
       _markers.add(Marker(
@@ -365,13 +394,6 @@ class _MyAppState extends State<SimpleMaps> {
       currentLocationlongitude = value.longitude;
     });
   }
-@override
-void initState() {
-  super.initState();
-  addMakerCarMoto(true);
-  addMakerCarMoto(false);
-  _markers.clear();
-}
   @override
   Widget build(BuildContext context) {
     //realTimeLocationTask();
